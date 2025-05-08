@@ -1,3 +1,5 @@
+// lib/models/medication.dart
+
 class Medication {
   final String id;
   final String name;

@@ -1,20 +1,7 @@
 // lib/providers/medication_provider.dart
 
 import 'package:flutter/material.dart';
-
-class Medication {
-  final String id;
-  final String name;
-  final int quantity;
-  final String schedule;
-
-  Medication({
-    required this.id,
-    required this.name,
-    required this.quantity,
-    required this.schedule,
-  });
-}
+import '../models/medication.dart'; // ✅ Import Medication from models
 
 class MedicationProvider with ChangeNotifier {
   List<Medication> _medications = [];

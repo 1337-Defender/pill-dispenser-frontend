@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/medication_provider.dart';
 import '../../providers/wallet_provider.dart';
 
@@ -17,6 +18,12 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Smart Pill Dispenser'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.pushNamed(context, '/loyalty_points'),
+            icon: const Icon(Icons.card_giftcard),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -26,6 +33,7 @@ class HomeScreen extends StatelessWidget {
             // Wallet Info Card
             Card(
               elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -41,7 +49,10 @@ class HomeScreen extends StatelessWidget {
                       style: const TextStyle(fontSize: 24, color: Colors.green),
                     ),
                     const SizedBox(height: 8),
-                    const Text('Loyalty Points: 50', style: TextStyle(color: Colors.grey)),
+                    const Text(
+                      'Loyalty Points: 50',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ],
                 ),
               ),
@@ -50,9 +61,23 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Medications List
-            const Text(
-              'Your Medications',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Your Medications',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (medicationProvider.medications.isNotEmpty)
+                  ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Edit'),
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             Expanded(
@@ -63,8 +88,15 @@ class HomeScreen extends StatelessWidget {
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     child: ListTile(
+                      leading: const Icon(Icons.local_pharmacy),
                       title: Text(medication.name),
                       subtitle: Text('Quantity: ${medication.quantity} | Schedule: ${medication.schedule}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          medicationProvider.removeMedication(medication.id);
+                        },
+                      ),
                     ),
                   );
                 },
@@ -73,11 +105,10 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/add_medication');
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.pushNamed(context, '/add_medication'),
+        label: const Text("Add Medication"),
+        icon: const Icon(Icons.add),
       ),
     );
   }

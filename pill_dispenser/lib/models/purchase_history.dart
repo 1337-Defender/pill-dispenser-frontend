@@ -1,3 +1,5 @@
+// lib/models/purchase_history.dart
+
 class PurchaseHistory {
   final String medicationName;
   final DateTime purchasedAt;
