@@ -31,29 +31,32 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Wallet Info Card
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Wallet Balance',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '\$${walletProvider.balance.toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 24, color: Colors.green),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Loyalty Points: 50',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
+            GestureDetector(
+              onTap: () => Navigator.pushNamed(context, '/wallet'),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Wallet Balance',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '\$${walletProvider.balance.toStringAsFixed(3)}',
+                        style: const TextStyle(fontSize: 24, color: Colors.green),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Loyalty Points: 50',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
