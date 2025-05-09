@@ -49,8 +49,10 @@ class MyApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: const HomeScreen(),
+      // home: const HomeScreen(),
+      initialRoute: '/',
       routes: {
+        '/': (ctx) => const HomeScreen(),
         '/login': (ctx) => LoginScreen(),
         '/dashboard': (ctx) => DashboardScreen(),
         '/add_medication': (ctx) => AddMedicationScreen(),
