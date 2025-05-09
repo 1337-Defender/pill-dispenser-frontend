@@ -22,8 +22,12 @@ class LoginScreen extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
+                if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please fill in all fields")));
+                  return;
+                }
                 Provider.of<AuthProvider>(context, listen: false).login('user123');
-                Navigator.pushReplacementNamed(context, '/home');
+                Navigator.pushReplacementNamed(context, '/');
               },
               child: Text("Login"),
             )
