@@ -1,8 +1,7 @@
-// lib/screens/home_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/medication_provider.dart';
 import '../../providers/wallet_provider.dart';
 
@@ -13,6 +12,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final medicationProvider = Provider.of<MedicationProvider>(context);
     final walletProvider = Provider.of<WalletProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -20,8 +20,18 @@ class HomeScreen extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            onPressed: () => Navigator.pushNamed(context, '/loyalty_points'),
+            onPressed: () => context.push('/loyalty_points'),
             icon: const Icon(Icons.card_giftcard),
+          ),
+          IconButton(
+            tooltip: 'Log out',
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await authProvider.signOut();
+              if (context.mounted) {
+                context.go('/login');
+              }
+            },
           ),
         ],
       ),
@@ -32,7 +42,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             // Wallet Info Card
             GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/wallet'),
+              onTap: () => context.push('/wallet'),
               child: Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -109,7 +119,7 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, '/add_medication'),
+        onPressed: () => context.push('/add_medication'),
         label: const Text("Add Medication"),
         icon: const Icon(Icons.add),
       ),
