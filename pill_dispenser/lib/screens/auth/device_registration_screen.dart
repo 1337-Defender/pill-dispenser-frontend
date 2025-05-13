@@ -89,6 +89,8 @@ class _DeviceRegistrationScreenState extends State<DeviceRegistrationScreen> {
         );
         return;
       } else {
+        await Provider.of<AuthProvider>(context, listen: false).fetchAndSetDispenserId();
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Device registered!')),
         );
