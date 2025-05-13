@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:pill_dispenser/screens/auth/auth_settings_popover.dart';
+import 'package:pill_dispenser/screens/configuration_screen.dart';
 import 'package:pill_dispenser/screens/dashboard.dart';
 import 'package:popover/popover.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _pages = [
     Dashboard(),
-    Scaffold(body: Text('Vinit')),
+    ConfigurationScreen(),
     Scaffold(body: Text('Veron')),
     Scaffold(body: Text('Shashank')),
   ];
