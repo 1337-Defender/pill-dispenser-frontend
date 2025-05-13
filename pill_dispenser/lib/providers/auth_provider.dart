@@ -40,6 +40,9 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus get authStatus => _authStatus;
   String? get errorMessage => _errorMessage;
 
+  String? _dispenserId;
+  String? get dispenserId => _dispenserId;
+
   AuthProvider() {
     _authStatus = AuthStatus.unknown;
     notifyListeners();
@@ -67,10 +70,34 @@ class AuthProvider extends ChangeNotifier {
     if (session != null) {
         _currentUser = session.user;
         _authStatus = AuthStatus.authenticated;
+        await fetchAndSetDispenserId();
     } else {
         _authStatus = AuthStatus.unauthenticated;
+        _dispenserId = null;
     }
     notifyListeners();
+  }
+
+  Future<void> fetchAndSetDispenserId() async {
+    if (_currentUser == null) {
+      _dispenserId = null;
+      notifyListeners();
+      return;
+    }
+    try {
+      final result = await _supabaseClient
+          .from('dispensers')
+          .select('id')
+          .eq('user_id', _currentUser!.id)
+          .maybeSingle();
+      print(result);
+      _dispenserId = result?['id'] as String?;
+      notifyListeners();
+    } catch (e) {
+      print("ERRORRRRR: $e");
+      _dispenserId = null;
+      notifyListeners();
+    }
   }
 
 
@@ -123,6 +150,7 @@ class AuthProvider extends ChangeNotifier {
       if (response.user != null) {
         _currentUser = response.user;
         _authStatus = AuthStatus.authenticated;
+        await fetchAndSetDispenserId();
         notifyListeners();
         return true;
       } else {
@@ -165,7 +193,7 @@ class AuthProvider extends ChangeNotifier {
       final existingDispenserCheck = await _supabaseClient
           .from('dispensers')
           .select('id, user_id')
-          .eq('hardware_id', hardwareId)
+          .eq('id', hardwareId)
           .maybeSingle(); // Use .maybeSingle() if it can be null
 
       if (existingDispenserCheck != null && existingDispenserCheck['user_id'] != null && existingDispenserCheck['user_id'] != _currentUser!.id) {
@@ -182,7 +210,7 @@ class AuthProvider extends ChangeNotifier {
       // For simplicity, we'll attempt an upsert or a direct insert here.
       // A more robust flow might separate checking and then inserting/updating.
 
-      final response = await _supabaseClient.from('dispensers').upsert({
+      final response = await _supabaseClient.from('dispenser_schema.dispensers').upsert({
         'hardware_id': hardwareId,
         'user_id': _currentUser!.id,
         // You might want to default other fields or update them if the row exists
