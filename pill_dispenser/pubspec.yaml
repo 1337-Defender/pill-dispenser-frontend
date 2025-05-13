@@ -16,6 +16,9 @@ dependencies:
   supabase_flutter: ^2.9.0
   flutter_dotenv: ^5.2.1
   google_fonts: ^6.2.1
+  google_nav_bar: ^5.0.7
+  lucide_icons_flutter: ^3.0.3
+  popover: ^0.3.1
 
 dev_dependencies:
   flutter_test:
