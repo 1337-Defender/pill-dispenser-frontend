@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:pill_dispenser/screens/auth/auth_settings_popover.dart';
 import 'package:pill_dispenser/screens/configuration_screen.dart';
 import 'package:pill_dispenser/screens/dashboard.dart';
+import 'package:pill_dispenser/screens/schedule_configuration_screen.dart';
 import 'package:popover/popover.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -31,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = [
     Dashboard(),
     ConfigurationScreen(),
-    Scaffold(body: Text('Veron')),
+    ScheduleConfigurationScreen(),
     Scaffold(body: Text('Shashank')),
   ];
 
