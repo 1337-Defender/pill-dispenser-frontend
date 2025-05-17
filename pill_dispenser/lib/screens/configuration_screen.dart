@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:pill_dispenser/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_router/go_router.dart';
 
 class ConfigurationScreen extends StatefulWidget {
   const ConfigurationScreen({super.key});
@@ -16,10 +17,12 @@ class ConfigurationScreen extends StatefulWidget {
 
 class _ConfigurationScreenState extends State<ConfigurationScreen> {
   late Future<List<Map<String, dynamic>>> _compartmentsFuture;
+  late Future<List<Map<String, dynamic>>> _medicationsFuture;
   @override
   void initState() {
     super.initState();
     _compartmentsFuture = _fetchCompartments();
+    _medicationsFuture = _fetchMedications();
   }
 
   Future<List<Map<String, dynamic>>> _fetchCompartments() async {
@@ -38,6 +41,22 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
       throw Exception(e);
     }
   }
+
+  Future<List<Map<String, dynamic>>> _fetchMedications() async {
+  final userId = Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
+  if (userId == null) return [];
+  try {
+    final response = await Supabase.instance.client
+        .from('medications')
+        .select('id, custom_name, custom_description, custom_strength')
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(response);
+  } catch (e) {
+    print("Error fetching medications: $e");
+    throw Exception(e);
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +199,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                     ),
                     ElevatedButton.icon(
                       onPressed: () {
-                        // TODO: Add medication
+                        context.push('/add_medication');
                       },
                       icon: const Icon(Icons.add, color: Colors.black),
                       label: const Text("Add"),
@@ -197,46 +216,68 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 ),
                 const SizedBox(height: 16),
                 // Example medication card (replace with your own medication list)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                FutureBuilder<List<Map<String, dynamic>>>(
+  future: _medicationsFuture,
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (snapshot.hasError) {
+      return Center(child: Text('Error: ${snapshot.error}'));
+    }
+    final medications = snapshot.data ?? [];
+    if (medications.isEmpty) {
+      return Text(
+        "No medications found.",
+        style: GoogleFonts.inter(fontSize: 16, color: Colors.grey[700]),
+      );
+    }
+    return Column(
+      children: medications.map((med) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.medication, color: Colors.black),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    med['custom_name'] ?? 'Unnamed',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.medication, color: Colors.black),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Panadol",
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            "Paracetamol • 500mg",
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.more_horiz),
-                        onPressed: () {
-                          // TODO: Show medication options
-                        },
-                      ),
-                    ],
+                  Text(
+                    "${med['custom_description'] ?? ''}${med['custom_description'] != null && med['custom_strength'] != null ? ' • ' : ''}${med['custom_strength'] ?? ''}",
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: Colors.grey[700],
+                    ),
                   ),
-                ),
+                ],
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.more_horiz),
+                onPressed: () {
+                  // TODO: Show medication options
+                },
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  },
+),
               ],
             );
           },
