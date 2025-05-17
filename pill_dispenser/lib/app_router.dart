@@ -102,7 +102,7 @@ class AppRouter {
       GoRoute(
         path: '/add_medication',
         builder: (context, state) => AddMedicationScreen(),
-      )
+      ),
       // ... other routes
     ],
   );
