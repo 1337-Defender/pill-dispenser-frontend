@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pill_dispenser/screens/auth/device_registration_screen.dart';
+import 'package:pill_dispenser/screens/compartment_configuration_screen.dart';
 import 'package:pill_dispenser/screens/home_screen.dart';
 import 'package:pill_dispenser/screens/medications/add_medications_screen.dart';
 import 'package:pill_dispenser/screens/wallet/loyalty_points_screen.dart';
@@ -103,6 +104,13 @@ class AppRouter {
         path: '/add_medication',
         builder: (context, state) => AddMedicationScreen(),
       ),
+      GoRoute(
+  path: '/configure_compartment/:id/:index',
+  builder: (context, state) => CompartmentConfigScreen(
+    compartmentId: state.pathParameters['id']!,
+    compartmentIndex: int.parse(state.pathParameters['index']!),
+  ),
+),
       // ... other routes
     ],
   );

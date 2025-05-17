@@ -21,48 +21,68 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
   @override
   void initState() {
     super.initState();
-    _compartmentsFuture = _fetchCompartments();
-    _medicationsFuture = _fetchMedications();
+    // _compartmentsFuture = _fetchCompartments();
+    // _medicationsFuture = _fetchMedications();
+    _fetchAll();
+  }
+
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   // This will be called when coming back to this screen
+  //   _fetchAll();
+  // }
+
+  void _fetchAll() {
+    setState(() {
+      _compartmentsFuture = _fetchCompartments();
+      _medicationsFuture = _fetchMedications();
+    });
   }
 
   Future<List<Map<String, dynamic>>> _fetchCompartments() async {
-    final dispenserId = Provider.of<AuthProvider>(context, listen: false).dispenserId;
+    final dispenserId =
+        Provider.of<AuthProvider>(context, listen: false).dispenserId;
     if (dispenserId == null) return [];
     try {
       final response = await Supabase.instance.client
-        .from('compartments')
-        .select('id, compartment_index, current_quantity, medication:medication_id (custom_name, custom_description, custom_strength)')
-        .eq('dispenser_id', dispenserId)
-        .order('compartment_index', ascending: true);
-        print(response);
-        return List<Map<String, dynamic>>.from(response);
-    } catch(e) {
+          .from('compartments')
+          .select(
+            'id, compartment_index, current_quantity, medication:medication_id (custom_name, custom_description, custom_strength)',
+          )
+          .eq('dispenser_id', dispenserId)
+          .order('compartment_index', ascending: true);
+      print(response);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
       print("Errorrrrrrrrrrrrrrr $e");
       throw Exception(e);
     }
   }
 
   Future<List<Map<String, dynamic>>> _fetchMedications() async {
-  final userId = Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
-  if (userId == null) return [];
-  try {
-    final response = await Supabase.instance.client
-        .from('medications')
-        .select('id, custom_name, custom_description, custom_strength')
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(response);
-  } catch (e) {
-    print("Error fetching medications: $e");
-    throw Exception(e);
+    final userId =
+        Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
+    if (userId == null) return [];
+    try {
+      final response = await Supabase.instance.client
+          .from('medications')
+          .select('id, custom_name, custom_description, custom_strength')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print("Error fetching medications: $e");
+      throw Exception(e);
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
-    final dispenserId = Provider.of<AuthProvider>(context, listen: false).dispenserId;
+    final dispenserId =
+        Provider.of<AuthProvider>(context, listen: false).dispenserId;
     print("HERREEEEEEEEEEEEE $dispenserId");
-    
+
     // return Scaffold(
     //   backgroundColor: const Color.fromARGB(255, 242, 243, 244),
     //   body: Padding(
@@ -73,7 +93,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     //         Text(
     //           "Compartments",
     //           style: GoogleFonts.inter(
-    //             fontSize: 24, 
+    //             fontSize: 24,
     //             fontWeight: FontWeight.w500,
     //           ),
     //         )
@@ -173,9 +193,15 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                               child: Center(
                                 child: IconButton(
                                   padding: EdgeInsets.zero,
-                                  icon: Icon(LucideIcons.chevronRight600, size: 16,),
-                                  onPressed: () {
-                                    // TODO: Navigate to compartment details
+                                  icon: Icon(
+                                    LucideIcons.chevronRight600,
+                                    size: 16,
+                                  ),
+                                  onPressed: () async {
+                                    await context.push(
+                                      '/configure_compartment/${compartment['id']}/${compartment['compartment_index']}',
+                                    );
+                                    _fetchAll();
                                   },
                                 ),
                               ),
@@ -204,7 +230,12 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                       icon: const Icon(Icons.add, color: Colors.black),
                       label: const Text("Add"),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 239, 255, 61),
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          239,
+                          255,
+                          61,
+                        ),
                         foregroundColor: Colors.black,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -217,67 +248,75 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 const SizedBox(height: 16),
                 // Example medication card (replace with your own medication list)
                 FutureBuilder<List<Map<String, dynamic>>>(
-  future: _medicationsFuture,
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (snapshot.hasError) {
-      return Center(child: Text('Error: ${snapshot.error}'));
-    }
-    final medications = snapshot.data ?? [];
-    if (medications.isEmpty) {
-      return Text(
-        "No medications found.",
-        style: GoogleFonts.inter(fontSize: 16, color: Colors.grey[700]),
-      );
-    }
-    return Column(
-      children: medications.map((med) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.medication, color: Colors.black),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    med['custom_name'] ?? 'Unnamed',
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    "${med['custom_description'] ?? ''}${med['custom_description'] != null && med['custom_strength'] != null ? ' • ' : ''}${med['custom_strength'] ?? ''}",
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.more_horiz),
-                onPressed: () {
-                  // TODO: Show medication options
-                },
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  },
-),
+                  future: _medicationsFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+                    final medications = snapshot.data ?? [];
+                    if (medications.isEmpty) {
+                      return Text(
+                        "No medications found.",
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          color: Colors.grey[700],
+                        ),
+                      );
+                    }
+                    return Column(
+                      children:
+                          medications.map((med) {
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.medication,
+                                    color: Colors.black,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        med['custom_name'] ?? 'Unnamed',
+                                        style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      Text(
+                                        "${med['custom_description'] ?? ''}${med['custom_description'] != null && med['custom_strength'] != null ? ' • ' : ''}${med['custom_strength'] ?? ''}",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 13,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Spacer(),
+                                  IconButton(
+                                    icon: const Icon(Icons.more_horiz),
+                                    onPressed: () {
+                                      // TODO: Show medication options
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                    );
+                  },
+                ),
               ],
             );
           },
