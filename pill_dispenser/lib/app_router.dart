@@ -7,6 +7,9 @@ import 'package:pill_dispenser/screens/auth/device_registration_screen.dart';
 import 'package:pill_dispenser/screens/compartment_configuration_screen.dart';
 import 'package:pill_dispenser/screens/home_screen.dart';
 import 'package:pill_dispenser/screens/medications/add_medications_screen.dart';
+import 'package:pill_dispenser/screens/schedule/add_schedule_screen.dart';
+import 'package:pill_dispenser/screens/schedule/edit_schedule_screen.dart';
+import 'package:pill_dispenser/screens/schedule/schedule_management_screen.dart';
 import 'package:pill_dispenser/screens/wallet/loyalty_points_screen.dart';
 import 'package:pill_dispenser/screens/wallet/wallet_screen.dart';
 import 'package:provider/provider.dart';
@@ -32,7 +35,9 @@ class AppRouter {
   static final GoRouter _router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
-    refreshListenable: RouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
+    refreshListenable: RouterRefreshStream(
+      Supabase.instance.client.auth.onAuthStateChange,
+    ),
     redirect: (BuildContext context, GoRouterState state) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final authStatus = authProvider.authStatus;
@@ -43,14 +48,18 @@ class AppRouter {
 
       // 1. If auth state is still unknown or actively authenticating,
       //    stay on splash screen (or go to it if somehow navigated away too early).
-      if (authStatus == AuthStatus.unknown || authStatus == AuthStatus.authenticating) {
+      if (authStatus == AuthStatus.unknown ||
+          authStatus == AuthStatus.authenticating) {
         return currentLoc == '/splash' ? null : '/splash';
       }
 
       // 2. If user is authenticated:
       if (authStatus == AuthStatus.authenticated) {
         // If they are on splash, login, or signup, redirect them to the dashboard.
-        if (currentLoc == '/splash' || currentLoc == '/login' || currentLoc == '/signup' /* || currentLoc == '/register-device' (if you add it back) */) {
+        if (currentLoc == '/splash' ||
+            currentLoc == '/login' ||
+            currentLoc ==
+                '/signup' /* || currentLoc == '/register-device' (if you add it back) */ ) {
           // TODO: You might want to add a check here in the future:
           // if the user needs to register a device and hasn't, send them to '/register-device'
           // For now, we go straight to dashboard.
@@ -74,14 +83,11 @@ class AppRouter {
       return null;
     },
     routes: <RouteBase>[
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => SplashScreen()
-      ),
+      GoRoute(path: '/splash', builder: (context, state) => SplashScreen()),
       GoRoute(
         path: '/login',
         // builder: (context, state) => LoginScreen(),
-        builder: (context, state) => AuthScreen()
+        builder: (context, state) => AuthScreen(),
       ),
       GoRoute(
         path: '/register-device',
@@ -89,28 +95,42 @@ class AppRouter {
       ),
       GoRoute(
         path: '/dashboard',
-        builder: (context, state) => HomeScreen(), // Your main authenticated screen
+        builder:
+            (context, state) => HomeScreen(), // Your main authenticated screen
         // Add more authenticated routes as children or at this level
       ),
       GoRoute(
         path: '/loyalty_points',
         builder: (context, state) => LoyaltyPointsScreen(),
       ),
-      GoRoute(
-        path: '/wallet',
-        builder: (context, state) => WalletScreen(),
-      ),
+      GoRoute(path: '/wallet', builder: (context, state) => WalletScreen()),
       GoRoute(
         path: '/add_medication',
         builder: (context, state) => AddMedicationScreen(),
       ),
       GoRoute(
-  path: '/configure_compartment/:id/:index',
-  builder: (context, state) => CompartmentConfigScreen(
-    compartmentId: state.pathParameters['id']!,
-    compartmentIndex: int.parse(state.pathParameters['index']!),
-  ),
-),
+        path: '/configure_compartment/:id/:index',
+        builder:
+            (context, state) => CompartmentConfigScreen(
+              compartmentId: state.pathParameters['id']!,
+              compartmentIndex: int.parse(state.pathParameters['index']!),
+            ),
+      ),
+      GoRoute(
+        path: '/manage_schedules',
+        builder: (context, state) => const ScheduleManagementScreen(),
+      ),
+      GoRoute(
+        path: '/add_schedule',
+        builder: (context, state) => AddScheduleScreen(), // You will create this
+      ),
+      GoRoute(
+        path: '/edit_schedule/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return EditScheduleScreen(scheduleId: id);
+        },
+      ),
       // ... other routes
     ],
   );
@@ -121,7 +141,9 @@ class RouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _subscription;
   RouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();
-    _subscription = stream.asBroadcastStream().listen((dynamic _) => notifyListeners());
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
   }
   @override
   void dispose() {
