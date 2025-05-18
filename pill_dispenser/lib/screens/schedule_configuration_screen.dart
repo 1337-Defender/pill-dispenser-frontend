@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:pill_dispenser/providers/auth_provider.dart';
@@ -211,8 +212,10 @@ class _ScheduleConfigurationScreenState
                         ),
                         // SizedBox(width: 12),
                         ElevatedButton.icon(
-                          onPressed: () {
+                          onPressed: () async {
                             // TODO: Implement add functionality
+                            await context.push('/manage_schedules');
+                            _fetchSchedules();
                           },
                           icon: const Icon(LucideIcons.pencil, color: Colors.black, size: 14,),
                           label: Text(
