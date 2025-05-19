@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -18,20 +16,12 @@ class ConfigurationScreen extends StatefulWidget {
 class _ConfigurationScreenState extends State<ConfigurationScreen> {
   late Future<List<Map<String, dynamic>>> _compartmentsFuture;
   late Future<List<Map<String, dynamic>>> _medicationsFuture;
+
   @override
   void initState() {
     super.initState();
-    // _compartmentsFuture = _fetchCompartments();
-    // _medicationsFuture = _fetchMedications();
     _fetchAll();
   }
-
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   // This will be called when coming back to this screen
-  //   _fetchAll();
-  // }
 
   void _fetchAll() {
     setState(() {
@@ -52,10 +42,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
           )
           .eq('dispenser_id', dispenserId)
           .order('compartment_index', ascending: true);
-      print(response);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print("Errorrrrrrrrrrrrrrr $e");
+      print("Error fetching compartments: $e");
       throw Exception(e);
     }
   }
@@ -77,30 +66,32 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     }
   }
 
+  // Stub for options menu (implement as needed)
+  void _showOptionsMenu(BuildContext context, Offset offset,
+      String medicationName, int index) async {
+    // TODO: Implement menu
+  }
+
+  // Stub for edit dialog (implement as needed)
+  void _showEditQuantityDialog(String medicationName, int index) {
+    // TODO: Implement dialog
+  }
+
+  // Dummy refill text logic, replace with your own
+  String _refillText(int? quantity) {
+    if (quantity == null) return '';
+    if (quantity > 30) return 'Refill in 1 month';
+    if (quantity > 14) return 'Refill in 2 weeks';
+    if (quantity > 7) return 'Refill in 10 days';
+    if (quantity > 3) return 'Refill in 3 days';
+    return 'Refill soon';
+  }
+
   @override
   Widget build(BuildContext context) {
     final dispenserId =
         Provider.of<AuthProvider>(context, listen: false).dispenserId;
-    print("HERREEEEEEEEEEEEE $dispenserId");
 
-    // return Scaffold(
-    //   backgroundColor: const Color.fromARGB(255, 242, 243, 244),
-    //   body: Padding(
-    //     padding: const EdgeInsets.symmetric(horizontal: 24),
-    //     child: Column(
-    //       children: [
-    //         SizedBox(height: 48),
-    //         Text(
-    //           "Compartments",
-    //           style: GoogleFonts.inter(
-    //             fontSize: 24,
-    //             fontWeight: FontWeight.w500,
-    //           ),
-    //         )
-    //       ],
-    //     ),
-    //   ),
-    // );
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 242, 243, 244),
       body: Padding(
@@ -194,7 +185,7 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                                 child: IconButton(
                                   padding: EdgeInsets.zero,
                                   icon: Icon(
-                                    LucideIcons.chevronRight600,
+                                    LucideIcons.chevronRight,
                                     size: 16,
                                   ),
                                   onPressed: () async {
@@ -246,7 +237,6 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Example medication card (replace with your own medication list)
                 FutureBuilder<List<Map<String, dynamic>>>(
                   future: _medicationsFuture,
                   builder: (context, snapshot) {
@@ -267,53 +257,51 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                       );
                     }
                     return Column(
-                      children:
-                          medications.map((med) {
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
+                      children: medications.map((med) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.medication,
+                                color: Colors.black,
                               ),
-                              child: Row(
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(
-                                    Icons.medication,
-                                    color: Colors.black,
+                                  Text(
+                                    med['custom_name'] ?? 'Unnamed',
+                                    style: GoogleFonts.inter(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        med['custom_name'] ?? 'Unnamed',
-                                        style: GoogleFonts.inter(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      Text(
-                                        "${med['custom_description'] ?? ''}${med['custom_description'] != null && med['custom_strength'] != null ? ' • ' : ''}${med['custom_strength'] ?? ''}",
-                                        style: GoogleFonts.inter(
-                                          fontSize: 13,
-                                          color: Colors.grey[700],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const Spacer(),
-                                  IconButton(
-                                    icon: const Icon(Icons.more_horiz),
-                                    onPressed: () {
-                                      // TODO: Show medication options
-                                    },
+                                  Text(
+                                    "${med['custom_description'] ?? ''}${med['custom_description'] != null && med['custom_strength'] != null ? ' • ' : ''}${med['custom_strength'] ?? ''}",
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13,
+                                      color: Colors.grey[700],
+                                    ),
                                   ),
                                 ],
                               ),
-                            );
-                          }).toList(),
+                              const Spacer(),
+                              IconButton(
+                                icon: const Icon(Icons.more_horiz),
+                                onPressed: () {
+                                  // TODO: Show medication options
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                     );
                   },
                 ),
@@ -323,15 +311,5 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
         ),
       ),
     );
-  }
-
-  // Dummy refill text logic, replace with your own
-  static String _refillText(int? quantity) {
-    if (quantity == null) return '';
-    if (quantity > 30) return 'Refill in 1 month';
-    if (quantity > 14) return 'Refill in 2 weeks';
-    if (quantity > 7) return 'Refill in 10 days';
-    if (quantity > 3) return 'Refill in 3 days';
-    return 'Refill soon';
   }
 }

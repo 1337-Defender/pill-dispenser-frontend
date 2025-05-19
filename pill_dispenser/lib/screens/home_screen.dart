@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:pill_dispenser/screens/auth/auth_settings_popover.dart';
 import 'package:pill_dispenser/screens/configuration_screen.dart';
 import 'package:pill_dispenser/screens/dashboard.dart';
+import 'package:pill_dispenser/screens/pharmacy/pharmacy_home_screen.dart';
 import 'package:pill_dispenser/screens/schedule_configuration_screen.dart';
 import 'package:popover/popover.dart';
 import 'package:provider/provider.dart';
@@ -33,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Dashboard(),
     ConfigurationScreen(),
     ScheduleConfigurationScreen(),
-    Scaffold(body: Text('Shashank')),
+    PlaceOrderScreen(),
   ];
 
   @override
@@ -54,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
               GButton(icon: LucideIcons.house, text: 'Home'),
               GButton(icon: LucideIcons.settings, text: 'Configuration'),
               GButton(icon: LucideIcons.calendarCheck, text: 'Schedule'),
-              GButton(icon: LucideIcons.store, text: 'Pharmacy'),
+              GButton(icon: LucideIcons.shoppingCart, text: 'Pharmacy'),
               // GButton(icon: LucideIcons.wallet, text: 'Wallet')
             ],
           ),
@@ -83,26 +84,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 8), // Space between icons
                 // Account Icon
-                Builder(
-                  builder: (context) {
-                    return Material(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(64),
-                      child: IconButton(
-                        tooltip: 'Account',
-                        icon: const Icon(LucideIcons.userRound, size: 24),
-                        onPressed:
-                            () => showPopover(
-                              width: 100,
-                              height: 100,
-                              backgroundColor: Colors.white,
-                              context: context,
-                              bodyBuilder: (context) => AuthSettingsPopover(),
-                            ),
+                Builder(builder: (context) {
+                  return Material(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(64),
+                    child: IconButton(
+                      tooltip: 'Account',
+                      icon: const Icon(LucideIcons.userRound, size: 24),
+                      onPressed: () => showPopover(
+                        width: 100,
+                        height: 100,
+                        backgroundColor: Colors.white,
+                        context: context,
+                        bodyBuilder: (context) => AuthSettingsPopover(),
                       ),
-                    );
-                  }
-                ),
+                    ),
+                  );
+                }),
               ],
             ),
           ),
