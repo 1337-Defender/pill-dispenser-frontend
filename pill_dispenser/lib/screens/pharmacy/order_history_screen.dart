@@ -7,6 +7,50 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
 
+  // Add a static getter for allOrders so it can be accessed from Dashboard
+  static List<Map<String, dynamic>> get allOrdersStatic => [
+    {
+      'id': 1,
+      'medication_name': 'Panadol',
+      'status': 'Completed',
+      'order_date': '2025-05-10',
+      'delivery_date': '2025-05-13',
+      'total_amount': 15.0,
+    },
+    {
+      'id': 2,
+      'medication_name': 'Amoxicillin',
+      'status': 'Pending',
+      'order_date': '2025-05-11',
+      'delivery_date': '2025-05-16',
+      'total_amount': 28.0,
+    },
+    {
+      'id': 3,
+      'medication_name': 'Vitamin D',
+      'status': 'Active',
+      'order_date': '2025-05-12',
+      'delivery_date': '2025-05-20',
+      'total_amount': 22.5,
+    },
+    {
+      'id': 4,
+      'medication_name': 'Paracetamol',
+      'status': 'Completed',
+      'order_date': '2025-04-29',
+      'delivery_date': '2025-05-02',
+      'total_amount': 10.0,
+    },
+    {
+      'id': 5,
+      'medication_name': 'Ibuprofen',
+      'status': 'Active',
+      'order_date': '2025-05-13',
+      'delivery_date': '2025-05-20',
+      'total_amount': 12.0,
+    },
+  ];
+
   @override
   State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
 }
@@ -62,19 +106,31 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     if (filterOption == 'All') return allOrders;
     if (filterOption == 'Active')
       return allOrders.where((o) => o['status'] == 'Active').toList();
+    if (filterOption == 'Pending')
+      return allOrders.where((o) => o['status'] == 'Pending').toList();
     return allOrders.where((o) => o['status'] == 'Completed').toList();
   }
 
-  void _showOptionsMenu(BuildContext context, Offset offset,
-      String medicationName, int index) async {
+  void _showOptionsMenu(
+    BuildContext context,
+    Offset offset,
+    String medicationName,
+    int index,
+  ) async {
     final selected = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
-          offset.dx, offset.dy, offset.dx + 1, offset.dy + 1),
+        offset.dx,
+        offset.dy,
+        offset.dx + 1,
+        offset.dy + 1,
+      ),
       items: [
         const PopupMenuItem<String>(value: 'view', child: Text('View Details')),
         const PopupMenuItem<String>(
-            value: 'cancel', child: Text('Cancel Order')),
+          value: 'cancel',
+          child: Text('Cancel Order'),
+        ),
       ],
     );
     if (selected == null) return;
@@ -117,15 +173,19 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
               // Top Bar (moved from appBar, matches subscription screen)
               Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0, vertical: 12.0),
+                  horizontal: 16.0,
+                  vertical: 12.0,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     CircleAvatar(
                       backgroundColor: Colors.white,
                       child: IconButton(
-                        icon:
-                            Icon(LucideIcons.chevronLeft, color: Colors.black),
+                        icon: Icon(
+                          LucideIcons.chevronLeft,
+                          color: Colors.black,
+                        ),
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
@@ -170,32 +230,42 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // All, Active, Completed tabs aligned to the left
+                          // All, Active, Pending, Completed tabs aligned to the left
                           Expanded(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
                                 GestureDetector(
-                                  onTap: () =>
-                                      setState(() => filterOption = 'All'),
+                                  onTap:
+                                      () =>
+                                          setState(() => filterOption = 'All'),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
-                                        vertical: 8, horizontal: 16),
+                                      vertical: 8,
+                                      horizontal: 16,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: filterOption == 'All'
-                                          ? const Color.fromARGB(
-                                              255, 239, 255, 61)
-                                          : Colors.white,
+                                      color:
+                                          filterOption == 'All'
+                                              ? const Color.fromARGB(
+                                                255,
+                                                239,
+                                                255,
+                                                61,
+                                              )
+                                              : Colors.white,
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                          color: Colors.grey.shade300),
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     child: Text(
                                       'All',
                                       style: GoogleFonts.inter(
-                                        color: filterOption == 'All'
-                                            ? Colors.black
-                                            : Colors.grey[700],
+                                        color:
+                                            filterOption == 'All'
+                                                ? Colors.black
+                                                : Colors.grey[700],
                                         fontWeight: FontWeight.w500,
                                         fontSize: 14,
                                       ),
@@ -204,26 +274,37 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                 ),
                                 const SizedBox(width: 8),
                                 GestureDetector(
-                                  onTap: () =>
-                                      setState(() => filterOption = 'Active'),
+                                  onTap:
+                                      () => setState(
+                                        () => filterOption = 'Active',
+                                      ),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
-                                        vertical: 8, horizontal: 16),
+                                      vertical: 8,
+                                      horizontal: 16,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: filterOption == 'Active'
-                                          ? const Color.fromARGB(
-                                              255, 239, 255, 61)
-                                          : Colors.white,
+                                      color:
+                                          filterOption == 'Active'
+                                              ? const Color.fromARGB(
+                                                255,
+                                                239,
+                                                255,
+                                                61,
+                                              )
+                                              : Colors.white,
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                          color: Colors.grey.shade300),
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     child: Text(
                                       'Active',
                                       style: GoogleFonts.inter(
-                                        color: filterOption == 'Active'
-                                            ? Colors.black
-                                            : Colors.grey[700],
+                                        color:
+                                            filterOption == 'Active'
+                                                ? Colors.black
+                                                : Colors.grey[700],
                                         fontWeight: FontWeight.w500,
                                         fontSize: 14,
                                       ),
@@ -232,26 +313,76 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                 ),
                                 const SizedBox(width: 8),
                                 GestureDetector(
-                                  onTap: () => setState(
-                                      () => filterOption = 'Completed'),
+                                  onTap:
+                                      () => setState(
+                                        () => filterOption = 'Pending',
+                                      ),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
-                                        vertical: 8, horizontal: 16),
+                                      vertical: 8,
+                                      horizontal: 16,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: filterOption == 'Completed'
-                                          ? const Color.fromARGB(
-                                              255, 239, 255, 61)
-                                          : Colors.white,
+                                      color:
+                                          filterOption == 'Pending'
+                                              ? const Color.fromARGB(
+                                                255,
+                                                239,
+                                                255,
+                                                61,
+                                              )
+                                              : Colors.white,
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                          color: Colors.grey.shade300),
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Pending',
+                                      style: GoogleFonts.inter(
+                                        color:
+                                            filterOption == 'Pending'
+                                                ? Colors.black
+                                                : Colors.grey[700],
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap:
+                                      () => setState(
+                                        () => filterOption = 'Completed',
+                                      ),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                      horizontal: 16,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          filterOption == 'Completed'
+                                              ? const Color.fromARGB(
+                                                255,
+                                                239,
+                                                255,
+                                                61,
+                                              )
+                                              : Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     child: Text(
                                       'Completed',
                                       style: GoogleFonts.inter(
-                                        color: filterOption == 'Completed'
-                                            ? Colors.black
-                                            : Colors.grey[700],
+                                        color:
+                                            filterOption == 'Completed'
+                                                ? Colors.black
+                                                : Colors.grey[700],
                                         fontWeight: FontWeight.w500,
                                         fontSize: 14,
                                       ),
@@ -293,9 +424,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                   margin: const EdgeInsets.only(right: 16),
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                      // color: Colors.yellowAccent,
-                                      // borderRadius: BorderRadius.circular(12),
-                                      ),
+                                    // color: Colors.yellowAccent,
+                                    // borderRadius: BorderRadius.circular(12),
+                                  ),
                                   child: const Icon(
                                     LucideIcons.pill,
                                     size: 20,
@@ -342,49 +473,78 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                         ),
                                       ),
                                       const SizedBox(height: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: status == 'Completed'
-                                              ? const Color.fromARGB(
-                                                  255, 143, 255, 143)
-                                              : status == 'Active'
-                                                  ? const Color.fromARGB(
-                                                      255, 255, 193, 7)
-                                                  : const Color.fromARGB(
-                                                      255, 239, 61, 61),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          status,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 11,
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  status == 'Active'
+                                                      ? Colors.green[100]
+                                                      : status == 'Completed'
+                                                      ? Colors.yellow[100]
+                                                      : status == 'Pending'
+                                                      ? Colors.orange[100]
+                                                      : Colors.red[100],
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              status == 'Active'
+                                                  ? 'Active'
+                                                  : status == 'Completed'
+                                                  ? 'Completed'
+                                                  : status == 'Pending'
+                                                  ? 'Pending'
+                                                  : status,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 12,
+                                                color:
+                                                    status == 'Active'
+                                                        ? Colors.green[800]
+                                                        : status == 'Completed'
+                                                        ? Colors.yellow[600]
+                                                        : status == 'Pending'
+                                                        ? Colors.orange[900]
+                                                        : Colors.red[800],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                        ],
                                       ),
                                     ],
                                   ),
                                 ),
                                 Builder(
-                                  builder: (context) => IconButton(
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(
-                                        minWidth: 32, minHeight: 32),
-                                    icon: const Icon(LucideIcons.ellipsis,
-                                        size: 20),
-                                    onPressed: () async {
-                                      final RenderBox button = context
-                                          .findRenderObject() as RenderBox;
-                                      final Offset offset =
-                                          button.localToGlobal(Offset.zero);
-                                      _showOptionsMenu(context, offset,
-                                          order['medication_name'], index);
-                                    },
-                                  ),
+                                  builder:
+                                      (context) => IconButton(
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(
+                                          minWidth: 32,
+                                          minHeight: 32,
+                                        ),
+                                        icon: const Icon(
+                                          LucideIcons.ellipsis,
+                                          size: 20,
+                                        ),
+                                        onPressed: () async {
+                                          final RenderBox button =
+                                              context.findRenderObject()
+                                                  as RenderBox;
+                                          final Offset offset = button
+                                              .localToGlobal(Offset.zero);
+                                          _showOptionsMenu(
+                                            context,
+                                            offset,
+                                            order['medication_name'],
+                                            index,
+                                          );
+                                        },
+                                      ),
                                 ),
                               ],
                             ),
@@ -402,8 +562,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.shopping_bag_outlined,
-                                    color: Colors.black, size: 20),
+                                const Icon(
+                                  Icons.shopping_bag_outlined,
+                                  color: Colors.black,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 12),
                                 Flexible(
                                   child: Column(

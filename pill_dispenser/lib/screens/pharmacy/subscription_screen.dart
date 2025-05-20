@@ -37,38 +37,55 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     },
   ];
 
-  void _showOptionsMenu(BuildContext context, Offset offset,
-      String medicationName, int index) async {
+  void _showOptionsMenu(
+    BuildContext context,
+    Offset offset,
+    String medicationName,
+    int index,
+  ) async {
     final selected = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
-          offset.dx, offset.dy, offset.dx + 1, offset.dy + 1),
+        offset.dx,
+        offset.dy,
+        offset.dx + 1,
+        offset.dy + 1,
+      ),
       items: [
         const PopupMenuItem<String>(value: 'pause', child: Text('Pause')),
         const PopupMenuItem<String>(
-            value: 'skip', child: Text('Skip Delivery')),
+          value: 'skip',
+          child: Text('Skip Delivery'),
+        ),
         const PopupMenuItem<String>(
-            value: 'cancel', child: Text('Cancel Subscription')),
+          value: 'cancel',
+          child: Text('Cancel Subscription'),
+        ),
         const PopupMenuItem<String>(
-            value: 'edit', child: Text('Edit Quantity')),
+          value: 'edit',
+          child: Text('Edit Quantity'),
+        ),
       ],
     );
     if (selected == null) return;
     switch (selected) {
       case 'pause':
         setState(() => subscriptions[index]['status'] = 'Paused');
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("$medicationName paused")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("$medicationName paused")));
         break;
       case 'skip':
         setState(() => subscriptions[index]['next_delivery'] = 'Skipped');
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Next delivery skipped")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Next delivery skipped")));
         break;
       case 'cancel':
         setState(() => subscriptions.removeAt(index));
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("$medicationName canceled")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("$medicationName canceled")));
         break;
       case 'edit':
         _showEditQuantityDialog(medicationName, index);
@@ -80,66 +97,75 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     int newQuantity = subscriptions[index]['quantity'];
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Edit Quantity for $medicationName",
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                hintText: "Enter quantity",
-                hintStyle: GoogleFonts.inter(),
-                filled: true,
-                fillColor: const Color.fromARGB(255, 248, 248, 248),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.circular(64),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Edit Quantity for $medicationName",
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
-              ),
-              onChanged: (value) {
-                if (value.isNotEmpty && int.tryParse(value) != null) {
-                  newQuantity = int.parse(value);
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                setState(() => subscriptions[index]['quantity'] = newQuantity);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Quantity updated to $newQuantity")),
-                );
-              },
-              icon: const Icon(Icons.check_circle,
-                  size: 16), // Use Material Icons
-              label: const Text("Confirm"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.yellowAccent,
-                foregroundColor: Colors.black,
-                minimumSize: const Size(double.infinity, 36),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 12),
+                TextField(
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: "Enter quantity",
+                    hintStyle: GoogleFonts.inter(),
+                    filled: true,
+                    fillColor: const Color.fromARGB(255, 248, 248, 248),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(64),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 24,
+                    ),
+                  ),
+                  onChanged: (value) {
+                    if (value.isNotEmpty && int.tryParse(value) != null) {
+                      newQuantity = int.parse(value);
+                    }
+                  },
                 ),
-              ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    setState(
+                      () => subscriptions[index]['quantity'] = newQuantity,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Quantity updated to $newQuantity"),
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.check_circle,
+                    size: 16,
+                  ), // Use Material Icons
+                  label: const Text("Confirm"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.yellowAccent,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size(double.infinity, 36),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -165,15 +191,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               // Top Bar
               Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0, vertical: 12.0), // Match home screen
+                  horizontal: 16.0,
+                  vertical: 12.0,
+                ), // Match home screen
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     CircleAvatar(
                       backgroundColor: Colors.white,
                       child: IconButton(
-                        icon:
-                            Icon(LucideIcons.chevronLeft, color: Colors.black),
+                        icon: Icon(
+                          LucideIcons.chevronLeft,
+                          color: Colors.black,
+                        ),
                         onPressed: () {
                           context.pop();
                         },
@@ -199,7 +229,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               // Title and actions (match home screen)
               Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0), // Match home screen
+                  horizontal: 16.0,
+                ), // Match home screen
                 child: Text(
                   'Recurring Subscriptions',
                   style: GoogleFonts.inter(
@@ -213,160 +244,186 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0), // Match home screen
-                  child: subscriptions.isEmpty
-                      ? Container(
-                          margin: const EdgeInsets.only(top: 24, bottom: 16),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(LucideIcons.pill,
-                                  color: Colors.black, size: 20),
-                              const SizedBox(width: 12),
-                              Flexible(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "No Active Subscriptions",
-                                      style: GoogleFonts.inter(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
+                    horizontal: 16.0,
+                  ), // Match home screen
+                  child:
+                      subscriptions.isEmpty
+                          ? Container(
+                            margin: const EdgeInsets.only(top: 24, bottom: 16),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  LucideIcons.pill,
+                                  color: Colors.black,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "No Active Subscriptions",
+                                        style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
                                       ),
-                                    ),
-                                    Text(
-                                      "You don't have any active subscriptions yet.",
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        color: Colors.grey[700],
+                                      Text(
+                                        "You don't have any active subscriptions yet.",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          color: Colors.grey[700],
+                                        ),
                                       ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          : ListView.builder(
+                            itemCount: subscriptions.length,
+                            itemBuilder: (context, index) {
+                              final sub = subscriptions[index];
+                              final status = sub['status'] as String;
+                              final nextDelivery =
+                                  sub['next_delivery'] as String;
+                              final price = sub['price'] as double;
+                              final quantity = sub['quantity'] as int;
+
+                              return Container(
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ), // Match home screen
+                                padding: const EdgeInsets.all(
+                                  16,
+                                ), // Match home screen
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.04),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: subscriptions.length,
-                          itemBuilder: (context, index) {
-                            final sub = subscriptions[index];
-                            final status = sub['status'] as String;
-                            final nextDelivery = sub['next_delivery'] as String;
-                            final price = sub['price'] as double;
-                            final quantity = sub['quantity'] as int;
-
-                            return Container(
-                              margin: const EdgeInsets.symmetric(
-                                  vertical: 8), // Match home screen
-                              padding:
-                                  const EdgeInsets.all(16), // Match home screen
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    margin: const EdgeInsets.only(right: 16),
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                        // color: Colors.yellowAccent,
-                                        // borderRadius: BorderRadius.circular(12),
-                                        ),
-                                    child: const Icon(
-                                      LucideIcons.pill,
-                                      size: 20,
-                                      color: Colors.black,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      margin: const EdgeInsets.only(right: 16),
+                                      padding: const EdgeInsets.all(8),
+                                      child: const Icon(
+                                        LucideIcons.pill,
+                                        size: 20,
+                                        color: Colors.black,
+                                      ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          sub['medication_name'],
-                                          style: GoogleFonts.inter(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          "Next Delivery: $nextDelivery",
-                                          style: GoogleFonts.inter(
-                                            fontSize: 13,
-                                            color: Colors.grey[700],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          "Price: AED ${price.toStringAsFixed(2)} | Quantity: $quantity",
-                                          style: GoogleFonts.inter(
-                                            fontSize: 13,
-                                            color: Colors.grey[700],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 10, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: status == 'Active'
-                                                ? const Color.fromARGB(
-                                                    255, 143, 255, 143)
-                                                : const Color.fromARGB(
-                                                    255, 255, 193, 7),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: Text(
-                                            status,
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            sub['medication_name'],
                                             style: GoogleFonts.inter(
-                                              fontSize: 11,
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16,
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            "Next Delivery: $nextDelivery",
+                                            style: GoogleFonts.inter(
+                                              fontSize: 13,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            "Price: AED ${price.toStringAsFixed(2)} | Quantity: $quantity",
+                                            style: GoogleFonts.inter(
+                                              fontSize: 13,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 2,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      status == 'Active'
+                                                          ? Colors.green[100]
+                                                          : Colors.red[100],
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  status == 'Active'
+                                                      ? 'Active'
+                                                      : 'Paused',
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 12,
+                                                    color:
+                                                        status == 'Active'
+                                                            ? Colors.green[800]
+                                                            : Colors.red[800],
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  Builder(
-                                    builder: (context) => IconButton(
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(
-                                          minWidth: 32, minHeight: 32),
-                                      icon: const Icon(LucideIcons.ellipsis,
-                                          size: 20),
-                                      onPressed: () async {
-                                        final RenderBox button = context
-                                            .findRenderObject() as RenderBox;
-                                        final Offset offset =
-                                            button.localToGlobal(Offset.zero);
-                                        _showOptionsMenu(context, offset,
-                                            sub['medication_name'], index);
-                                      },
+                                    Builder(
+                                      builder:
+                                          (context) => IconButton(
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(
+                                              minWidth: 32,
+                                              minHeight: 32,
+                                            ),
+                                            icon: const Icon(
+                                              LucideIcons.ellipsis,
+                                              size: 20,
+                                            ),
+                                            onPressed: () async {
+                                              final RenderBox button =
+                                                  context.findRenderObject()
+                                                      as RenderBox;
+                                              final Offset offset = button
+                                                  .localToGlobal(Offset.zero);
+                                              _showOptionsMenu(
+                                                context,
+                                                offset,
+                                                sub['medication_name'],
+                                                index,
+                                              );
+                                            },
+                                          ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                 ),
               ),
             ],
