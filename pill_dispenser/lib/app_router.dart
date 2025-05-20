@@ -7,6 +7,7 @@ import 'package:pill_dispenser/screens/auth/device_registration_screen.dart';
 import 'package:pill_dispenser/screens/compartment_configuration_screen.dart';
 import 'package:pill_dispenser/screens/home_screen.dart';
 import 'package:pill_dispenser/screens/medications/add_medications_screen.dart';
+import 'package:pill_dispenser/screens/pharmacy/cart_screen.dart';
 import 'package:pill_dispenser/screens/schedule/add_schedule_screen.dart';
 import 'package:pill_dispenser/screens/schedule/edit_schedule_screen.dart';
 import 'package:pill_dispenser/screens/schedule/schedule_management_screen.dart';
@@ -14,6 +15,8 @@ import 'package:pill_dispenser/screens/wallet/loyalty_points_screen.dart';
 import 'package:pill_dispenser/screens/wallet/wallet_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:pill_dispenser/screens/pharmacy/payment_screen.dart';
+import 'package:pill_dispenser/screens/pharmacy/pharmacy_home_screen.dart';
 
 // Import your screen widgets
 import 'providers/auth_provider.dart';
@@ -21,6 +24,8 @@ import 'screens/auth/login_screen.dart';
 // import 'features/auth/screens/signup_screen.dart';
 // import 'features/auth/screens/device_registration_screen.dart';
 import '/screens/splash_screen.dart'; // Example splash
+import 'screens/pharmacy/subscription_screen.dart';
+import 'screens/pharmacy/order_history_screen.dart';
 
 class AppRouter {
   static final AppRouter _instance = AppRouter._internal();
@@ -59,7 +64,7 @@ class AppRouter {
         if (currentLoc == '/splash' ||
             currentLoc == '/login' ||
             currentLoc ==
-                '/signup' /* || currentLoc == '/register-device' (if you add it back) */ ) {
+                '/signup' /* || currentLoc == '/register-device' (if you add it back) */) {
           // TODO: You might want to add a check here in the future:
           // if the user needs to register a device and hasn't, send them to '/register-device'
           // For now, we go straight to dashboard.
@@ -95,8 +100,8 @@ class AppRouter {
       ),
       GoRoute(
         path: '/dashboard',
-        builder:
-            (context, state) => HomeScreen(), // Your main authenticated screen
+        builder: (context, state) =>
+            HomeScreen(), // Your main authenticated screen
         // Add more authenticated routes as children or at this level
       ),
       GoRoute(
@@ -110,11 +115,10 @@ class AppRouter {
       ),
       GoRoute(
         path: '/configure_compartment/:id/:index',
-        builder:
-            (context, state) => CompartmentConfigScreen(
-              compartmentId: state.pathParameters['id']!,
-              compartmentIndex: int.parse(state.pathParameters['index']!),
-            ),
+        builder: (context, state) => CompartmentConfigScreen(
+          compartmentId: state.pathParameters['id']!,
+          compartmentIndex: int.parse(state.pathParameters['index']!),
+        ),
       ),
       GoRoute(
         path: '/manage_schedules',
@@ -122,7 +126,8 @@ class AppRouter {
       ),
       GoRoute(
         path: '/add_schedule',
-        builder: (context, state) => AddScheduleScreen(), // You will create this
+        builder: (context, state) =>
+            AddScheduleScreen(), // You will create this
       ),
       GoRoute(
         path: '/edit_schedule/:id',
@@ -131,6 +136,29 @@ class AppRouter {
           return EditScheduleScreen(scheduleId: id);
         },
       ),
+      GoRoute(
+        path: '/subscriptions',
+        builder: (context, state) => SubscriptionScreen(),
+      ),
+      GoRoute(
+        path: '/order_history',
+        builder: (context, state) => OrderHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/cart',
+        builder: (context, state) {
+          final cartItems = state.extra as List<Map<String, dynamic>>? ?? [];
+          return CheckoutScreen(cartItems: cartItems);
+        },
+      ),
+      GoRoute(
+        path: '/payment',
+        builder: (context, state) => PaymentScreen(),
+      ),
+      GoRoute(
+        path: '/place_order',
+        builder: (context, state) => PlaceOrderScreen(),
+      )
       // ... other routes
     ],
   );
@@ -142,8 +170,8 @@ class RouterRefreshStream extends ChangeNotifier {
   RouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();
     _subscription = stream.asBroadcastStream().listen(
-      (dynamic _) => notifyListeners(),
-    );
+          (dynamic _) => notifyListeners(),
+        );
   }
   @override
   void dispose() {

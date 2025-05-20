@@ -110,255 +110,331 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       data: popupMenuTheme,
       child: Scaffold(
         backgroundColor: const Color.fromARGB(255, 242, 243, 244),
-        appBar: AppBar(
-          title: Text(
-            "Order History",
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          elevation: 0,
-          backgroundColor: const Color.fromARGB(0, 0, 0, 0),
-          centerTitle: true,
-        ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: ListView(
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 24),
-              Text(
-                "Your Orders",
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
+              // Top Bar (moved from appBar, matches subscription screen)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: IconButton(
+                        icon:
+                            Icon(LucideIcons.chevronLeft, color: Colors.black),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(LucideIcons.bell, color: Colors.black),
+                          onPressed: () {},
+                        ),
+                        const SizedBox(width: 8),
+                        CircleAvatar(
+                          backgroundColor: Colors.white,
+                          child: Icon(LucideIcons.user, color: Colors.black),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Filter Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() => filterOption = 'All'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: filterOption == 'All'
-                            ? const Color.fromARGB(255, 239, 255, 61)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Text(
-                        'All',
-                        style: GoogleFonts.inter(
-                          color: filterOption == 'All'
-                              ? Colors.black
-                              : Colors.grey[700],
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
+              // Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  "Your Orders",
+                  style: GoogleFonts.inter(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
                   ),
-                  GestureDetector(
-                    onTap: () => setState(() => filterOption = 'Active'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: filterOption == 'Active'
-                            ? const Color.fromARGB(255, 239, 255, 61)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Text(
-                        'Active',
-                        style: GoogleFonts.inter(
-                          color: filterOption == 'Active'
-                              ? Colors.black
-                              : Colors.grey[700],
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => setState(() => filterOption = 'Completed'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: filterOption == 'Completed'
-                            ? const Color.fromARGB(255, 239, 255, 61)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Text(
-                        'Completed',
-                        style: GoogleFonts.inter(
-                          color: filterOption == 'Completed'
-                              ? Colors.black
-                              : Colors.grey[700],
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-
               const SizedBox(height: 16),
-
-              // Orders List
-              ClipRect(
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filteredOrders.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 1,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 2.0, // Shorter height
-                  ),
-                  itemBuilder: (context, index) {
-                    final order = filteredOrders[index];
-                    final status = order['status'] as String;
-
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
+              // Main content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: ListView(
+                    children: [
+                      // Filter Row
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // All, Active, Completed tabs aligned to the left
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                Text(
-                                  order['medication_name'],
-                                  style: GoogleFonts.inter(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
+                                GestureDetector(
+                                  onTap: () =>
+                                      setState(() => filterOption = 'All'),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 16),
+                                    decoration: BoxDecoration(
+                                      color: filterOption == 'All'
+                                          ? const Color.fromARGB(
+                                              255, 239, 255, 61)
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                          color: Colors.grey.shade300),
+                                    ),
+                                    child: Text(
+                                      'All',
+                                      style: GoogleFonts.inter(
+                                        color: filterOption == 'All'
+                                            ? Colors.black
+                                            : Colors.grey[700],
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "Ordered on ${order['order_date']}",
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12, color: Colors.grey[700]),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "Expected Delivery: ${order['delivery_date']}",
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12, color: Colors.grey[700]),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "AED ${order['total_amount'].toStringAsFixed(2)}",
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12, color: Colors.grey[700]),
-                                ),
-                                const SizedBox(height: 2),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: status == 'Completed'
-                                        ? const Color.fromARGB(
-                                            255, 143, 255, 143)
-                                        : status == 'Active'
-                                            ? const Color.fromARGB(
-                                                255, 255, 193, 7)
-                                            : const Color.fromARGB(
-                                                255, 239, 61, 61),
-                                    borderRadius: BorderRadius.circular(12),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () =>
+                                      setState(() => filterOption = 'Active'),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 16),
+                                    decoration: BoxDecoration(
+                                      color: filterOption == 'Active'
+                                          ? const Color.fromARGB(
+                                              255, 239, 255, 61)
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                          color: Colors.grey.shade300),
+                                    ),
+                                    child: Text(
+                                      'Active',
+                                      style: GoogleFonts.inter(
+                                        color: filterOption == 'Active'
+                                            ? Colors.black
+                                            : Colors.grey[700],
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
+                                      ),
+                                    ),
                                   ),
-                                  child: Text(
-                                    status,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () => setState(
+                                      () => filterOption = 'Completed'),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 16),
+                                    decoration: BoxDecoration(
+                                      color: filterOption == 'Completed'
+                                          ? const Color.fromARGB(
+                                              255, 239, 255, 61)
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                          color: Colors.grey.shade300),
+                                    ),
+                                    child: Text(
+                                      'Completed',
+                                      style: GoogleFonts.inter(
+                                        color: filterOption == 'Completed'
+                                            ? Colors.black
+                                            : Colors.grey[700],
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          Builder(
-                            builder: (context) => IconButton(
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                  minWidth: 24, minHeight: 24),
-                              icon: const Icon(LucideIcons.ellipsis, size: 16),
-                              onPressed: () async {
-                                final RenderBox button =
-                                    context.findRenderObject() as RenderBox;
-                                final Offset offset =
-                                    button.localToGlobal(Offset.zero);
-                                _showOptionsMenu(context, offset,
-                                    order['medication_name'], index);
-                              },
-                            ),
-                          ),
                         ],
                       ),
-                    );
-                  },
-                ),
-              ),
-
-              if (filteredOrders.isEmpty)
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 24, bottom: 16),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.shopping_bag_outlined,
-                            color: Colors.black, size: 20),
-                        const SizedBox(width: 12),
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "No Orders Found",
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
+                      const SizedBox(height: 16),
+                      // Orders List
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filteredOrders.length,
+                        itemBuilder: (context, index) {
+                          final order = filteredOrders[index];
+                          final status = order['status'] as String;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
                                 ),
-                              ),
-                              Text(
-                                "You don't have any orders yet.",
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: Colors.grey[700],
+                              ],
+                            ),
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.only(right: 16),
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                      // color: Colors.yellowAccent,
+                                      // borderRadius: BorderRadius.circular(12),
+                                      ),
+                                  child: const Icon(
+                                    LucideIcons.pill,
+                                    size: 20,
+                                    color: Colors.black,
+                                  ),
                                 ),
-                              ),
-                            ],
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        order['medication_name'],
+                                        style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Ordered on " + order['order_date'],
+                                        style: GoogleFonts.inter(
+                                          fontSize: 13,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        "Expected Delivery: " +
+                                            order['delivery_date'],
+                                        style: GoogleFonts.inter(
+                                          fontSize: 13,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        "AED " +
+                                            order['total_amount']
+                                                .toStringAsFixed(2),
+                                        style: GoogleFonts.inter(
+                                          fontSize: 13,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: status == 'Completed'
+                                              ? const Color.fromARGB(
+                                                  255, 143, 255, 143)
+                                              : status == 'Active'
+                                                  ? const Color.fromARGB(
+                                                      255, 255, 193, 7)
+                                                  : const Color.fromARGB(
+                                                      255, 239, 61, 61),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          status,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 11,
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Builder(
+                                  builder: (context) => IconButton(
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                        minWidth: 32, minHeight: 32),
+                                    icon: const Icon(LucideIcons.ellipsis,
+                                        size: 20),
+                                    onPressed: () async {
+                                      final RenderBox button = context
+                                          .findRenderObject() as RenderBox;
+                                      final Offset offset =
+                                          button.localToGlobal(Offset.zero);
+                                      _showOptionsMenu(context, offset,
+                                          order['medication_name'], index);
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      if (filteredOrders.isEmpty)
+                        Center(
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 24, bottom: 16),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.shopping_bag_outlined,
+                                    color: Colors.black, size: 20),
+                                const SizedBox(width: 12),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "No Orders Found",
+                                        style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      Text(
+                                        "You don't have any orders yet.",
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
+              ),
             ],
           ),
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:go_router/go_router.dart';
 
 enum PaymentMethod { card, cod, wallet }
 
@@ -12,10 +13,33 @@ class PaymentScreen extends StatefulWidget {
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
-  PaymentMethod selectedMethod = PaymentMethod.card;
+  PaymentMethod? selectedMethod; // Start as null so no tile is highlighted
   bool isFormValid = false; // Track form validity
   int? _selectedMonth;
   int? _selectedYear;
+  bool showDetails = false; // Control visibility of details
+  double? totalAmount;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Retrieve totalAmount from GoRouter extra (expecting a map)
+    final extra = GoRouterState.of(context).extra;
+    if (extra is Map && extra['totalAmount'] != null) {
+      final val = extra['totalAmount'];
+      if (val is double) {
+        totalAmount = val;
+      } else if (val is int) {
+        totalAmount = val.toDouble();
+      } else if (val is String) {
+        totalAmount = double.tryParse(val);
+      } else {
+        totalAmount = null;
+      }
+    } else {
+      totalAmount = null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,172 +47,237 @@ class _PaymentScreenState extends State<PaymentScreen> {
       backgroundColor: Colors.grey[100],
       appBar: null,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top Bar
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: IconButton(
-                      icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(LucideIcons.bell, color: Colors.black),
-                        onPressed: () {},
-                      ),
-                      SizedBox(width: 8),
-                      CircleAvatar(
-                        backgroundColor: Colors.white,
-                        child: Icon(LucideIcons.user, color: Colors.black),
-                      ),
-                    ],
-                  )
-                ],
-              ),
-              SizedBox(height: 16),
-
-              Text(
-                'Select Payment Method',
-                style: GoogleFonts.inter(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 16),
-
-              // Payment Options
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: _PaymentOptionCard(
-                      label: 'Cash on Delivery',
-                      subtitle: 'Surcharge of AED 10 will be applied',
-                      icon: LucideIcons.banknote,
-                      isSelected: selectedMethod == PaymentMethod.cod,
-                      onTap: () =>
-                          setState(() => selectedMethod = PaymentMethod.cod),
-                      minHeight: 120, // Set a fixed height for all tiles
-                      alignLeft: true, // Move contents to left
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: _PaymentOptionCard(
-                      label: 'Digital Wallet',
-                      subtitle: 'Pay with your own Digital Wallet',
-                      icon: LucideIcons.wallet,
-                      isSelected: selectedMethod == PaymentMethod.wallet,
-                      onTap: () =>
-                          setState(() => selectedMethod = PaymentMethod.wallet),
-                      minHeight: 120,
-                      alignLeft: true,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: _PaymentOptionCard(
-                      label: 'Card Payment',
-                      subtitle: 'Pay with your Credit or Debit Card',
-                      icon: LucideIcons.creditCard,
-                      isSelected: selectedMethod == PaymentMethod.card,
-                      onTap: () =>
-                          setState(() => selectedMethod = PaymentMethod.card),
-                      minHeight: 120,
-                      alignLeft: true,
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 24),
-
-              // Card Details (Visible only for Card Payment)
-              if (selectedMethod == PaymentMethod.card) ...[
-                Text(
-                  'Card Details',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 20,
-                  ),
-                ),
-                SizedBox(height: 12),
-                _buildTextField('Card Number', '1234 1234 1234 1234'),
-                SizedBox(height: 12),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top Bar
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(child: _buildTextField('Expiry Date', 'MM/YY')),
-                    SizedBox(width: 12),
-                    Expanded(
-                        child: _buildTextField('CVV', '***', isObscure: true)),
+                    CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: IconButton(
+                        icon: Icon(
+                          LucideIcons.chevronLeft,
+                          color: Colors.black,
+                        ),
+                        onPressed: () {
+                          // Use GoRouter to navigate to checkout screen
+                          // context.push('/cart');
+                          context.pop();
+                        },
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(LucideIcons.bell, color: Colors.black),
+                          onPressed: () {},
+                        ),
+                        SizedBox(width: 8),
+                        CircleAvatar(
+                          backgroundColor: Colors.white,
+                          child: Icon(LucideIcons.user, color: Colors.black),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 SizedBox(height: 16),
-              ],
 
-              // Digital Wallet Balance (Visible only for Digital Wallet)
-              if (selectedMethod == PaymentMethod.wallet)
-                _buildInfoRow('Digital Wallet Balance', 'AED 05.00'),
-
-              // Surcharge (Visible only for Cash on Delivery)
-              if (selectedMethod == PaymentMethod.cod)
-                _buildInfoRow('Surcharge', 'AED 10.00'),
-
-              // Loyalty Points
-              _buildInfoRow(
-                'Loyalty Points',
-                'AED 05.00',
-                trailing: _YellowButton(text: 'Redeem Points'),
-              ),
-
-              // Total Amount
-              _buildInfoRow('Total Amount', 'AED 05.00'),
-
-              // Payable Amount
-              _buildInfoRow(
-                'Payable',
-                selectedMethod == PaymentMethod.cod ? 'AED 15.00' : 'AED 05.00',
-                isBold: true,
-              ),
-
-              Spacer(),
-
-              // Pay/Confirm Button
-              Center(
-                child: ElevatedButton(
-                  onPressed: isFormValid
-                      ? () {}
-                      : null, // Disable button if form is not valid
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.yellowAccent,
-                    foregroundColor: Colors.black,
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    minimumSize: Size(double.infinity, 56),
-                  ),
-                  child: Text(
-                    selectedMethod == PaymentMethod.card
-                        ? 'Pay Now'
-                        : 'Confirm Payment',
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 20,
-                    ),
+                Text(
+                  'Select Payment Method',
+                  style: GoogleFonts.inter(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
-            ],
+                SizedBox(height: 16),
+
+                // Payment Options
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: _PaymentOptionCard(
+                        label: 'Cash on Delivery',
+                        subtitle: 'Surcharge of AED 10 will be applied',
+                        icon: LucideIcons.banknote,
+                        isSelected: selectedMethod == PaymentMethod.cod,
+                        onTap: () {
+                          setState(() {
+                            selectedMethod = PaymentMethod.cod;
+                            showDetails = true;
+                          });
+                        },
+                        minHeight: 120, // Set a fixed height for all tiles
+                        alignLeft: true, // Move contents to left
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _PaymentOptionCard(
+                        label: 'Digital Wallet',
+                        subtitle: 'Pay with your own Digital Wallet',
+                        icon: LucideIcons.wallet,
+                        isSelected: selectedMethod == PaymentMethod.wallet,
+                        onTap: () {
+                          setState(() {
+                            selectedMethod = PaymentMethod.wallet;
+                            showDetails = true;
+                          });
+                        },
+                        minHeight: 120,
+                        alignLeft: true,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _PaymentOptionCard(
+                        label: 'Card Payment',
+                        subtitle: 'Pay with your Credit or Debit Card',
+                        icon: LucideIcons.creditCard,
+                        isSelected: selectedMethod == PaymentMethod.card,
+                        onTap: () {
+                          setState(() {
+                            selectedMethod = PaymentMethod.card;
+                            showDetails = true;
+                          });
+                        },
+                        minHeight: 120,
+                        alignLeft: true,
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 24),
+
+                if (showDetails) ...[
+                  // Card Details (Visible only for Card Payment)
+                  if (selectedMethod == PaymentMethod.card) ...[
+                    Text(
+                      'Card Details',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 20,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    _buildTextField('Card Number', '1234 1234 1234 1234'),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 240, // Adjusted width for Expiry Date fields
+                          child: _buildTextField('Expiry Date', 'MM/YY'),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: _buildTextField('CVV', '***', isObscure: true),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                  ],
+
+                  // Digital Wallet Balance (Visible only for Digital Wallet)
+                  if (selectedMethod == PaymentMethod.wallet)
+                    _buildInfoRow('Digital Wallet Balance', 'AED 05.00'),
+
+                  // Surcharge (Visible only for Cash on Delivery)
+                  if (selectedMethod == PaymentMethod.cod)
+                    _buildInfoRow('Surcharge', 'AED 10.00'),
+
+                  // Loyalty Points
+                  _buildInfoRow('Loyalty Points', 'AED 05.00'),
+                  const SizedBox(height: 16),
+
+                  // Total Amount
+                  _buildInfoRow(
+                    'Total Amount',
+                    totalAmount != null
+                        ? 'AED ' + totalAmount!.toStringAsFixed(2)
+                        : 'AED --',
+                  ),
+
+                  // Payable Amount
+                  _buildInfoRow(
+                    'Payable',
+                    selectedMethod == PaymentMethod.cod
+                        ? (totalAmount != null
+                            ? 'AED ' + (totalAmount! + 10.0).toStringAsFixed(2)
+                            : 'AED --')
+                        : (totalAmount != null
+                            ? 'AED ' + totalAmount!.toStringAsFixed(2)
+                            : 'AED --'),
+                    isBold: true,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Redeem Points Button
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.yellowAccent,
+                        foregroundColor: Colors.black,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        minimumSize: Size(double.infinity, 56),
+                      ),
+                      child: Text(
+                        'Redeem Points',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Pay/Confirm Button
+                  Center(
+                    child: ElevatedButton(
+                      onPressed:
+                          isFormValid
+                              ? () {}
+                              : null, // Disable button if form is not valid
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.yellowAccent,
+                        foregroundColor: Colors.black,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        minimumSize: Size(double.infinity, 56),
+                      ),
+                      child: Text(
+                        selectedMethod == PaymentMethod.card
+                            ? 'Pay Now'
+                            : 'Confirm Payment',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),
@@ -204,29 +293,39 @@ class _PaymentScreenState extends State<PaymentScreen> {
         width: double.infinity,
         child: Row(
           children: [
-            Expanded(
+            SizedBox(
+              width: 110, // Month field fixed width
               child: DropdownButtonFormField<int>(
                 decoration: InputDecoration(
                   labelText: 'Month',
                   labelStyle: GoogleFonts.inter(
-                      fontWeight: FontWeight.w500, fontSize: 18),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 20),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 20,
+                  ),
                 ),
                 value: _selectedMonth,
-                items: months
-                    .map((m) => DropdownMenuItem(
-                          value: m,
-                          child: Text(m.toString().padLeft(2, '0'),
-                              style: GoogleFonts.inter(fontSize: 18)),
-                        ))
-                    .toList(),
+                items:
+                    months
+                        .map(
+                          (m) => DropdownMenuItem(
+                            value: m,
+                            child: Text(
+                              m.toString().padLeft(2, '0'),
+                              style: GoogleFonts.inter(fontSize: 18),
+                            ),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (val) {
                   setState(() {
                     _selectedMonth = val;
@@ -236,29 +335,41 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
             ),
             SizedBox(width: 12),
-            Expanded(
+            SizedBox(
+              width:
+                  110, // Year field fixed width to fit dropdown arrow and text
               child: DropdownButtonFormField<int>(
+                isExpanded: true,
                 decoration: InputDecoration(
                   labelText: 'Year',
                   labelStyle: GoogleFonts.inter(
-                      fontWeight: FontWeight.w500, fontSize: 18),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 20),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 20,
+                  ),
                 ),
                 value: _selectedYear,
-                items: years
-                    .map((y) => DropdownMenuItem(
-                          value: y,
-                          child: Text(y.toString(),
-                              style: GoogleFonts.inter(fontSize: 18)),
-                        ))
-                    .toList(),
+                items:
+                    years
+                        .map(
+                          (y) => DropdownMenuItem(
+                            value: y,
+                            child: Text(
+                              y.toString(),
+                              style: GoogleFonts.inter(fontSize: 18),
+                            ),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (val) {
                   setState(() {
                     _selectedYear = val;
@@ -275,8 +386,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       obscureText: isObscure,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle:
-            GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 18),
+        labelStyle: GoogleFonts.inter(
+          fontWeight: FontWeight.w500,
+          fontSize: 18,
+        ),
         hintText: hint,
         hintStyle: GoogleFonts.inter(fontSize: 18),
         filled: true,
@@ -292,8 +405,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value,
-      {Widget? trailing, bool isBold = false}) {
+  Widget _buildInfoRow(
+    String label,
+    String value, {
+    Widget? trailing,
+    bool isBold = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
@@ -315,10 +432,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   fontSize: 18,
                 ),
               ),
-              if (trailing != null) ...[
-                SizedBox(width: 8),
-                trailing,
-              ]
+              if (trailing != null) ...[SizedBox(width: 8), trailing],
             ],
           ),
         ],
@@ -372,13 +486,18 @@ class _PaymentOptionCard extends StatelessWidget {
               alignLeft ? CrossAxisAlignment.start : CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,
-                size: 28, color: isSelected ? Colors.black : Colors.grey[700]),
+            Icon(
+              icon,
+              size: 28,
+              color: isSelected ? Colors.black : Colors.grey[700],
+            ),
             SizedBox(height: 8),
             Text(
               label,
-              style:
-                  GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
               textAlign: alignLeft ? TextAlign.left : TextAlign.center,
             ),
             SizedBox(height: 4),
@@ -407,9 +526,7 @@ class _YellowButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.yellowAccent,
         foregroundColor: Colors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
       child: Text(

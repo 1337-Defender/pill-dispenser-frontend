@@ -2,12 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-// Import screens for navigation (if needed)
-// import 'cart_screen.dart';
-import 'cart_screen.dart'; // Ensure this is correctly imported
-import 'subscription_screen.dart';
-import 'order_history_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'cart_screen.dart';
 
 class PlaceOrderScreen extends StatefulWidget {
   const PlaceOrderScreen({Key? key}) : super(key: key);
@@ -17,33 +13,193 @@ class PlaceOrderScreen extends StatefulWidget {
 }
 
 class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
-  int _selectedIndex = 3;
   List<Map<String, dynamic>> products = [];
+  List<Map<String, dynamic>> cartItems = []; // Track selected medications
+  int? _selectedProductId; // Track selected tile
 
-  void _onItemTapped(int index) {
+  void _onItemTapped(int index) async {
+    final item = products[index];
+    final productId = item['id'];
     setState(() {
-      _selectedIndex = index;
+      _selectedProductId = productId;
     });
+    final productDetails = await Supabase.instance.client
+        .from('products')
+        .select()
+        .eq('id', productId)
+        .single();
+    // Always start with quantity 1 when opening the bottom sheet
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        int tempQuantity = 1; // Always default to 1
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: MediaQuery.of(context).viewInsets,
+              child: SingleChildScrollView(
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        productDetails['name'],
+                        style: GoogleFonts.inter(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${productDetails['description']} • ${productDetails['strength']}',
+                        style: GoogleFonts.inter(
+                            fontSize: 14, color: Colors.grey[700]),
+                      ),
+                      const SizedBox(height: 12),
+                      if (productDetails['details'] != null)
+                        Text(
+                          productDetails['details'],
+                          style: GoogleFonts.inter(
+                              fontSize: 13, color: Colors.grey[800]),
+                        ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove),
+                            onPressed: tempQuantity > 1
+                                ? () async {
+                                    setModalState(() => tempQuantity--);
+                                    await _updateCartQuantityInDatabase(
+                                        productId, tempQuantity);
+                                  }
+                                : null,
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text('$tempQuantity',
+                                style: GoogleFonts.inter(fontSize: 16)),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add),
+                            onPressed: () async {
+                              setModalState(() => tempQuantity++);
+                              await _updateCartQuantityInDatabase(
+                                  productId, tempQuantity);
+                            },
+                          ),
+                          const Spacer(),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.yellowAccent,
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                            ),
+                            onPressed: () async {
+                              setState(() {
+                                final idx = cartItems
+                                    .indexWhere((c) => c['id'] == productId);
+                                if (idx != -1) {
+                                  cartItems[idx]['quantity'] = tempQuantity;
+                                } else {
+                                  final newItem =
+                                      Map<String, dynamic>.from(productDetails);
+                                  newItem['quantity'] = tempQuantity;
+                                  cartItems.add(newItem);
+                                }
+                              });
+                              await _updateCartQuantityInDatabase(
+                                  productId, tempQuantity);
+                              Navigator.of(context).pop();
+                            },
+                            child: Text(
+                              'ADD  AED ' +
+                                  ((productDetails['price'] is num
+                                              ? productDetails['price']
+                                              : double.tryParse(
+                                                      productDetails['price']
+                                                          .toString()) ??
+                                                  0.0) *
+                                          tempQuantity)
+                                      .toStringAsFixed(2),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    setState(() {
+      _selectedProductId = null;
+    });
+  }
+
+  Future<void> _updateCartQuantityInDatabase(
+      int productId, int quantity) async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId != null) {
+        await Supabase.instance.client.from('cart').update({
+          'quantity': quantity,
+        }).match({
+          'user_id': userId,
+          'product_id': productId,
+        });
+      }
+    } catch (e) {
+      print("Error updating cart quantity: $e");
+    }
+  }
+
+  Future<void> _insertCartItemInDatabase(Map<String, dynamic> product) async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId != null) {
+        await Supabase.instance.client.from('cart').insert({
+          'user_id': userId,
+          'product_id': product['id'],
+          'quantity': 1,
+        });
+      }
+    } catch (e) {
+      print("Error inserting cart item: $e");
+    }
+  }
+
+  Future<void> _fetchProducts() async {
+    try {
+      final response = await Supabase.instance.client.from('products').select();
+      setState(() {
+        products = response.cast<Map<String, dynamic>>();
+      });
+    } catch (e) {
+      print("Error fetching products: $e");
+    }
   }
 
   @override
   void initState() {
     super.initState();
     _fetchProducts();
-  }
-
-  Future<void> _fetchProducts() async {
-    try {
-      final response = await Supabase.instance.client.from('products').select();
-
-      if (response is List) {
-        setState(() {
-          products = response.cast<Map<String, dynamic>>();
-        });
-      }
-    } catch (e) {
-      print("Error fetching products: $e");
-    }
   }
 
   @override
@@ -60,29 +216,28 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Back button
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: IconButton(
-                      icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                  // Row(
-                  //   children: [
-                  //     IconButton(
-                  //       icon: Icon(LucideIcons.bell, color: Colors.black),
-                  //       onPressed: () {},
-                  //     ),
-                  //     SizedBox(width: 8),
-                  //     CircleAvatar(
-                  //       backgroundColor: Colors.white,
-                  //       child: Icon(LucideIcons.user, color: Colors.black),
-                  //     ),
-                  //   ],
-                  // ),
-                ],
+                // children: [
+                //   CircleAvatar(
+                //     backgroundColor: Colors.white,
+                //     child: IconButton(
+                //       icon: Icon(LucideIcons.chevronLeft, color: Colors.black),
+                //       onPressed: () => Navigator.pop(context),
+                //     ),
+                //   ),
+                //   Row(
+                //     children: [
+                //       IconButton(
+                //         icon: Icon(LucideIcons.bell, color: Colors.black),
+                //         onPressed: () {},
+                //       ),
+                //       SizedBox(width: 8),
+                //       CircleAvatar(
+                //         backgroundColor: Colors.white,
+                //         child: Icon(LucideIcons.user, color: Colors.black),
+                //       ),
+                //     ],
+                //   ),
+                // ],
               ),
             ),
 
@@ -112,12 +267,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                           EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CheckoutScreen(),
-                        ),
-                      );
+                      context.push('/cart', extra: cartItems);
                     },
                     child: Text('Checkout'),
                   ),
@@ -148,12 +298,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                       title: 'Recurring Orders',
                       subtitle: 'Subscribe and Get 10% Off',
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const SubscriptionScreen(),
-                          ),
-                        );
+                        context.push('/subscriptions');
                       },
                     ),
                   ),
@@ -164,12 +309,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                       title: 'Order History',
                       subtitle: 'Your active and past orders',
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const OrderHistoryScreen(),
-                          ),
-                        );
+                        context.push('/order_history');
                       },
                     ),
                   ),
@@ -178,6 +318,7 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
             ),
 
             SizedBox(height: 16),
+
             Divider(thickness: 1),
 
             // Product list
@@ -188,15 +329,17 @@ class _PlaceOrderScreenState extends State<PlaceOrderScreen> {
                   itemCount: products.length,
                   itemBuilder: (context, index) {
                     final item = products[index];
-                    final name = item['name'];
-                    final description =
-                        '${item['description']} • ${item['strength']}';
-                    final price = 'AED ${item['price']}';
+                    final isSelected = _selectedProductId == item['id'];
 
-                    return _ProductTile(
-                      name: name,
-                      subtitle: description,
-                      price: price,
+                    return GestureDetector(
+                      onTap: () => _onItemTapped(index),
+                      child: _ProductTile(
+                        name: item['name'],
+                        subtitle:
+                            '${item['description']} • ${item['strength']}',
+                        price: 'AED ${item['price'].toStringAsFixed(2)}',
+                        isSelected: isSelected,
+                      ),
                     );
                   },
                 ),
@@ -229,8 +372,8 @@ class _ActionCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 4),
-        padding: EdgeInsets.all(16),
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -251,7 +394,7 @@ class _ActionCard extends StatelessWidget {
                 Icon(icon, size: 28),
               ],
             ),
-            SizedBox(height: 12), // Space between icon and title
+            const SizedBox(height: 12), // Space between icon and title
             Text(
               title,
               style: GoogleFonts.inter(
@@ -259,7 +402,7 @@ class _ActionCard extends StatelessWidget {
                 fontSize: 13,
               ),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               subtitle,
               style: GoogleFonts.inter(
@@ -279,27 +422,29 @@ class _ProductTile extends StatelessWidget {
   final String name;
   final String subtitle;
   final String price;
+  final bool isSelected;
 
   const _ProductTile({
     Key? key,
     required this.name,
     required this.subtitle,
     required this.price,
+    this.isSelected = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isSelected ? Colors.yellowAccent : Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           Icon(LucideIcons.pill, size: 20),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,7 +456,7 @@ class _ProductTile extends StatelessWidget {
                     fontSize: 16,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: GoogleFonts.inter(
